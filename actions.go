@@ -9,8 +9,6 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
-
-	"github.com/oleiade/trousseau/dsn"
 )
 
 func CreateAction(ct CryptoType, ca CryptoAlgorithm, recipients []string) error {
@@ -52,92 +50,14 @@ func CreateAction(ct CryptoType, ca CryptoAlgorithm, recipients []string) error 
 	return nil
 }
 
-func PushAction(destination string, sshPrivateKey string, askPassword bool) error {
-	endpointDsn, err := dsn.Parse(destination)
-	if err != nil {
-		return err
-	}
-
-	switch endpointDsn.Scheme {
-	case "s3":
-		err := endpointDsn.SetDefaults(S3Defaults)
-		if err != nil {
-			return err
-		}
-
-		err = UploadUsingS3(endpointDsn)
-		if err != nil {
-			return err
-		}
-	case "scp":
-		err := endpointDsn.SetDefaults(ScpDefaults)
-		if err != nil {
-			return err
-		}
-
-		if askPassword == true {
-			password := PromptForHiddenInput("Ssh endpoint password: ")
-			endpointDsn.Secret = password
-		}
-
-		err = UploadUsingScp(endpointDsn, sshPrivateKey)
-		if err != nil {
-			return err
-		}
-	case "gist":
-		err = UploadUsingGist(endpointDsn)
-		if err != nil {
-			return err
-		}
-	}
+func PushAction() error {
+	Upload()
 
 	return nil
 }
 
-func PullAction(source string, sshPrivateKey string, askPassword bool) error {
-	endpointDsn, err := dsn.Parse(source)
-	if err != nil {
-		return err
-	}
-
-	switch endpointDsn.Scheme {
-	case "s3":
-		err := endpointDsn.SetDefaults(S3Defaults)
-		if err != nil {
-			return err
-		}
-
-		err = DownloadUsingS3(endpointDsn)
-		if err != nil {
-			return err
-		}
-	case "scp":
-		err := endpointDsn.SetDefaults(ScpDefaults)
-		if err != nil {
-			return err
-		}
-
-		if askPassword == true {
-			password := PromptForHiddenInput("Ssh endpoint password: ")
-			endpointDsn.Secret = password
-		}
-
-		err = DownloadUsingScp(endpointDsn, sshPrivateKey)
-		if err != nil {
-			return err
-		}
-	case "gist":
-		err = DownloadUsingGist(endpointDsn)
-		if err != nil {
-			return err
-		}
-	default:
-		if endpointDsn.Scheme == "" {
-			ErrorLogger.Fatalf("No dsn scheme supplied")
-		} else {
-			ErrorLogger.Fatalf("Invalid dsn scheme supplied: %s", endpointDsn.Scheme)
-		}
-	}
+func PullAction() error {
+	Download()
 
 	return nil
 }
