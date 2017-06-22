@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/oleiade/trousseau"
 	"github.com/urfave/cli"
@@ -97,60 +96,24 @@ func LoginCommand() cli.Command {
 func PushCommand() cli.Command {
 	return cli.Command{
 		Name:        "push",
-		Usage:       "Push the encrypted data store to a remote storage",
-		Description: "The local encrypted data store will be pushed to the remote store",
+		Usage:       "trousseau push [OPTIONS] NAME[:TAG]",
+		Description: "Push an encrypted data store to the remote store",
 		Action: func(c *cli.Context) error {
-			if !hasExpectedArgs(c.Args(), 1) {
-				trousseau.ErrorLogger.Fatal("Invalid number of arguments provided to push command")
-			}
-
 			return nil
 		},
-		Flags: []cli.Flag{
-			cli.BoolFlag{
-				Name:  "overwrite",
-				Usage: "Overwrite any existing remote resource with pushed data",
-			},
-			cli.BoolFlag{
-				Name:  "password",
-				Usage: "Prompt for remote host ssh password",
-			},
-			cli.StringFlag{
-				Name:  "ssh-private-key",
-				Value: filepath.Join(os.Getenv("HOME"), ".ssh/id_rsa"),
-				Usage: "Path to the ssh private key to be used when pushing to remote storage via ssh",
-			},
-		},
+		Flags: []cli.Flag{},
 	}
 }
 
 func PullCommand() cli.Command {
 	return cli.Command{
 		Name:        "pull",
-		Usage:       "Pull the encrypted data store from the remote store",
-		Description: "The remote encrypted data store described by a data source name",
+		Usage:       "trousseau pull [OPTIONS] NAME[:TAG|DIGEST]",
+		Description: "Pull the encrypted data store from the remote store",
 		Action: func(c *cli.Context) error {
-			if !hasExpectedArgs(c.Args(), 1) {
-				trousseau.ErrorLogger.Fatal("Invalid number of arguments provided to pull command")
-			}
-
 			return nil
 		},
-		Flags: []cli.Flag{
-			cli.BoolFlag{
-				Name:  "overwrite",
-				Usage: "Overwrite local data store with pulled remote resource",
-			},
-			cli.BoolFlag{
-				Name:  "password",
-				Usage: "Prompt for remote host ssh password",
-			},
-			cli.StringFlag{
-				Name:  "ssh-private-key",
-				Value: filepath.Join(os.Getenv("HOME"), ".ssh/id_rsa"),
-				Usage: "Path to the ssh private key to be used when pulling from remote storage via ssh",
-			},
-		},
+		Flags: []cli.Flag{},
 	}
 }
 
