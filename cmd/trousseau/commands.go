@@ -73,6 +73,27 @@ func CreateCommand() cli.Command {
 	}
 }
 
+func LoginCommand() cli.Command {
+	return cli.Command{
+		Name:        "login",
+		Usage:       "trousseau login [OPTIONS] [SERVER]",
+		Description: "Log in to a trousseau remote store",
+		Action: func(c *cli.Context) error {
+			return nil
+		},
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:  "username",
+				Usage: "Username",
+			},
+			cli.StringFlag{
+				Name:  "password",
+				Usage: "Password",
+			},
+		},
+	}
+}
+
 func PushCommand() cli.Command {
 	return cli.Command{
 		Name:        "push",
