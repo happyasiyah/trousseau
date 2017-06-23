@@ -25,6 +25,7 @@ func main() {
 		ShowCommand(),
 		ExportCommand(),
 		ImportCommand(),
+		LoginCommand(),
 		PushCommand(),
 		PullCommand(),
 		ListRecipientsCommand(),

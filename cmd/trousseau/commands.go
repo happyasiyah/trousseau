@@ -78,11 +78,25 @@ func LoginCommand() cli.Command {
 		Usage:       "trousseau login [OPTIONS] [SERVER]",
 		Description: "Log in to a trousseau remote store",
 		Action: func(c *cli.Context) error {
+			var server string
+			if len(c.Args()) == 0 {
+				server = "http://store.trousseau.io:8080"
+			} else if len(c.Args()) == 1 {
+				server = c.Args().Get(0)
+			}
+
+			token, err := trousseau.Authenticate(server, c.String("username"), c.String("password"))
+			if err != nil {
+				trousseau.ErrorLogger.Printf("unable to authenticate: %v\n", err)
+			}
+
 			// Send auth request to server
 			// + if auth fails with 404
 			//   + then request user creation
 			//   + run auth again
 			// write user + token in config file
+
+			trousseau.InfoLogger.Printf("authenticated with token: %s expires at: %s", token.Token, token.Expire)
 
 			return nil
 		},
