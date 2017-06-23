@@ -78,6 +78,12 @@ func LoginCommand() cli.Command {
 		Usage:       "trousseau login [OPTIONS] [SERVER]",
 		Description: "Log in to a trousseau remote store",
 		Action: func(c *cli.Context) error {
+			// Send auth request to server
+			// + if auth fails with 404
+			//   + then request user creation
+			//   + run auth again
+			// write user + token in config file
+
 			return nil
 		},
 		Flags: []cli.Flag{
@@ -99,6 +105,8 @@ func PushCommand() cli.Command {
 		Usage:       "trousseau push [OPTIONS] NAME[:TAG]",
 		Description: "Push an encrypted data store to the remote store",
 		Action: func(c *cli.Context) error {
+			// Fetch auth tokens from config file
+			// POST store to server
 			return nil
 		},
 		Flags: []cli.Flag{},
@@ -111,6 +119,9 @@ func PullCommand() cli.Command {
 		Usage:       "trousseau pull [OPTIONS] NAME[:TAG|DIGEST]",
 		Description: "Pull the encrypted data store from the remote store",
 		Action: func(c *cli.Context) error {
+			// Fetch auth tokens from config file
+			// GET user's store from server
+			// Replace current store with the fetched one
 			return nil
 		},
 		Flags: []cli.Flag{},
