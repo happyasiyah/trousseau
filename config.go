@@ -1,12 +1,32 @@
 package trousseau
 
-import "io"
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"io/ioutil"
+)
 
-type JSONSerializableFileReadWriter interface {
-	Read(r io.Reader) ([]byte, error)
-	Write(data []byte, w io.Writer) error
-	Serialize(v interface{}) ([]byte, error)
-	Deserialize(data []byte, v interface{}) error
+type Loader interface {
+	Load(data []byte) error
+	LoadFrom(r io.Reader) error
+}
+
+type Dumper interface {
+	Dump() ([]byte, error)
+	DumpTo(w io.Writer) error
+}
+
+type LoadDumper interface {
+	Loader
+	Dumper
+}
+
+const DEFAULT_TROUSSEAU_CONFIGURATION_NAME = ".trousseauconfig"
+
+type Configuration struct {
+	Authentication Authentication `json:"authentication"`
+	Server         string         `json:"server"`
 }
 
 type Authentication struct {
@@ -14,24 +34,48 @@ type Authentication struct {
 	Token    Token  `json:"token"`
 }
 
-type Configuration struct {
-	Authentication Authentication `json"authentication"`
-}
+func (c *Configuration) Load(data []byte) error {
+	err := json.Unmarshal(data, c)
+	if err != nil {
+		return fmt.Errorf("unable to deserialize configuration: %v\n", err)
+	}
 
-func (c *Configuration) Serialize(v interface{}) ([]byte, error) {
-	return nil, nil
-}
-
-func (c *Configuration) Deserialize(data []byte, v interface{}) error {
 	return nil
 }
 
-func (c *Configuration) Read(r io.Reader) ([]byte, error) {
-	return nil, nil
-}
+func (c *Configuration) LoadFrom(r io.Reader) error {
+	data, err := ioutil.ReadAll(r)
+	if err != nil {
+		return fmt.Errorf("unable to read file buffer content: %v\n", err)
+	}
 
-func (c *Configuration) Write(r io.Writer) error {
+	err = c.Load(data)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-const DEFAULT_TROUSSEAU_CONFIGURATION_NAME = ".trousseauconfig"
+func (c *Configuration) Dump() ([]byte, error) {
+	data, err := json.Marshal(c)
+	if err != nil {
+		return nil, fmt.Errorf("unable to serialize configuration: %v\n", err)
+	}
+
+	return data, nil
+}
+
+func (c *Configuration) DumpTo(w io.Writer) error {
+	data, err := c.Dump()
+	if err != nil {
+		return err
+	}
+
+	_, err = w.Write(data)
+	if err != nil {
+		return fmt.Errorf("unable to write configuration data: %v\n", err)
+	}
+
+	return nil
+}

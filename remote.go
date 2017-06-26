@@ -14,6 +14,11 @@ type Token struct {
 	Token  string `json:"token"`
 }
 
+type AuthenticationError struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
 func Authenticate(server string, username string, password string) (Token, error) {
 	absoluteURL, err := endpointURL(server, "api/v1/auth")
 	if err != nil {
@@ -42,6 +47,16 @@ func Authenticate(server string, username string, password string) (Token, error
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return Token{}, fmt.Errorf("unable to read response data: %v\n", err)
+	}
+
+	if resp.StatusCode != 200 {
+		var authError AuthenticationError
+		err := json.Unmarshal(data, &authError)
+		if err != nil {
+			// return Token{}, fmt.Errorf("server denied authentication; unable to parse error response\n")
+		}
+
+		return Token{}, fmt.Errorf("server denied authentication; reason: %s\n", authError.Message)
 	}
 
 	var token Token

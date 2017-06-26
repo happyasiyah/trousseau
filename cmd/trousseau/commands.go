@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"os/user"
+	"path"
 
 	"github.com/oleiade/trousseau"
 	"github.com/urfave/cli"
@@ -78,6 +80,14 @@ func LoginCommand() cli.Command {
 		Usage:       "trousseau login [OPTIONS] [SERVER]",
 		Description: "Log in to a trousseau remote store",
 		Action: func(c *cli.Context) error {
+			if c.String("username") == "" {
+				return cli.NewExitError("fatal: please provide a username using the --username option", 1)
+			}
+
+			if c.String("password") == "" {
+				return cli.NewExitError("fatal: please provide a password using the --password option", 1)
+			}
+
 			var server string
 			if len(c.Args()) == 0 {
 				server = "http://store.trousseau.io:8080"
@@ -85,18 +95,39 @@ func LoginCommand() cli.Command {
 				server = c.Args().Get(0)
 			}
 
-			token, err := trousseau.Authenticate(server, c.String("username"), c.String("password"))
+			user, err := user.Current()
 			if err != nil {
-				trousseau.ErrorLogger.Printf("unable to authenticate: %v\n", err)
+				return cli.NewExitError(fmt.Sprintf("fatal: unable to figure current user out: %v\n", err), 1)
 			}
 
-			// Send auth request to server
-			// + if auth fails with 404
-			//   + then request user creation
-			//   + run auth again
-			// write user + token in config file
+			configFilePath := path.Join(user.HomeDir, trousseau.DEFAULT_TROUSSEAU_CONFIGURATION_NAME)
+			f, err := os.OpenFile(configFilePath, os.O_CREATE|os.O_RDWR, 0700)
+			if err != nil {
+				return cli.NewExitError(fmt.Sprintf("fatal: unable to open/create trousseau config file: %s\v", err), 1)
+			}
 
-			trousseau.InfoLogger.Printf("authenticated with token: %s expires at: %s", token.Token, token.Expire)
+			var config trousseau.Configuration
+			config.LoadFrom(f)
+
+			if config.Authentication.Token.Token != "" {
+				return cli.NewExitError("fatal: already authenticated", 1)
+			} else {
+				token, err := trousseau.Authenticate(server, c.String("username"), c.String("password"))
+				if err != nil {
+					return cli.NewExitError(err.Error(), 1)
+				}
+
+				config.Authentication = trousseau.Authentication{
+					Username: c.String("username"),
+					Token:    token,
+				}
+
+				config.Server = server
+
+				config.DumpTo(f)
+			}
+
+			trousseau.InfoLogger.Printf("you are now authenticated")
 
 			return nil
 		},
