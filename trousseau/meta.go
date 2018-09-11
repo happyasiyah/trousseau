@@ -3,10 +3,13 @@ package trousseau
 import "time"
 
 type Meta struct {
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	CreatedAt   time.Time         `json:"created_at"`
+	UpdatedAt   time.Time         `json:"updated_at"`
+	Description string            `json:"description"`
+	Labels      map[string]string `json:"labels"`
 }
 
-func NewMeta(createdAt, updatedAt time.Time) *Meta {
-	return &Meta{createdAt, updatedAt}
+type Describable interface {
+	Meta() Meta
+	SetMeta(m Meta) error
 }
